@@ -196,7 +196,7 @@ Base URL: `http://localhost:8080`
 | Var | Default | Description |
 |-----|---------|-------------|
 | `MONGO_URI` | `mongodb://localhost:27017` | MongoDB connection string |
-| `MONGO_DB` | `pokedex` | Database name |
+| `MONGO_DB` | `pocketbase` | Database name |
 
 ### API only
 

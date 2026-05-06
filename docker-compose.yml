@@ -6,7 +6,7 @@ services:
     ports:
       - "27018:27017"   # host 27017 may be occupied; connect locally via port 27018
     environment:
-      MONGO_INITDB_DATABASE: pokedex
+      MONGO_INITDB_DATABASE: pocketbase
     volumes:
       - mongo_data:/data/db
 
@@ -22,7 +22,7 @@ services:
       - "8080:8080"
     environment:
       MONGO_URI: mongodb://mongo:27017
-      MONGO_DB: pokedex
+      MONGO_DB: pocketbase
       HTTP_ADDR: ":8080"
       CORS_ORIGIN: "http://localhost:3000"
     command: ["/usr/local/bin/api"]
@@ -38,7 +38,7 @@ services:
       - mongo
     environment:
       MONGO_URI: mongodb://mongo:27017
-      MONGO_DB: pokedex
+      MONGO_DB: pocketbase
       POKEAPI_BASE_URL: https://pokeapi.co/api/v2
       POKEAPI_CONCURRENCY: "4"
       POKEAPI_REQ_PER_SEC: "8"
