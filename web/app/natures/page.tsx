@@ -1,3 +1,5 @@
+export const runtime = "edge";
+
 import type { Metadata } from "next";
 import { fetchNatureList } from "@/lib/api";
 import { capitalize } from "@/lib/utils";

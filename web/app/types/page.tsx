@@ -1,3 +1,5 @@
+export const runtime = "edge";
+
 import type { Metadata } from "next";
 import { fetchTypeList } from "@/lib/api";
 import { TypeBadge } from "@/components/type-badge";
