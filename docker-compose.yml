@@ -1,0 +1,61 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: pocketbase-mongo
+    restart: unless-stopped
+    ports:
+      - "27018:27017"   # host 27017 may be occupied; connect locally via port 27018
+    environment:
+      MONGO_INITDB_DATABASE: pokedex
+    volumes:
+      - mongo_data:/data/db
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pocketbase-api
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    ports:
+      - "8080:8080"
+    environment:
+      MONGO_URI: mongodb://mongo:27017
+      MONGO_DB: pokedex
+      HTTP_ADDR: ":8080"
+      CORS_ORIGIN: "http://localhost:3000"
+    command: ["/usr/local/bin/api"]
+
+  # Run on demand:  docker compose run --rm sync
+  sync:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pocketbase-sync
+    profiles: ["sync"]
+    depends_on:
+      - mongo
+    environment:
+      MONGO_URI: mongodb://mongo:27017
+      MONGO_DB: pokedex
+      POKEAPI_BASE_URL: https://pokeapi.co/api/v2
+      POKEAPI_CONCURRENCY: "4"
+      POKEAPI_REQ_PER_SEC: "8"
+    command: ["/usr/local/bin/sync"]
+
+  web:
+    build:
+      context: ./web
+    container_name: pocketbase-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+      API_URL_INTERNAL: http://api:8080
+
+volumes:
+  mongo_data:
