@@ -24,7 +24,7 @@ async function get<T>(path: string, params?: Record<string, string | number | un
       }
     }
   }
-  const res = await fetch(url.toString(), { cache: "no-store" });
+  const res = await fetch(url.toString());
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText);
     throw new Error(`API ${res.status}: ${text}`);
