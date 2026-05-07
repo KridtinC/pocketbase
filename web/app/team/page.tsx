@@ -462,7 +462,7 @@ export default function TeamBuilderPage() {
           const bg = mainType ? typeBg(mainType) : "#9ca3af";
 
           return (
-            <div key={i} className="rounded-3xl border border-white/20 dark:border-white/10 shadow-sm min-w-0 overflow-hidden" style={{ background: "var(--glass-bg)" }}>
+            <div key={i} className="rounded-3xl border border-white/20 dark:border-white/10 shadow-sm min-w-0" style={{ background: "var(--glass-bg)" }}>
               {/* Header */}
               <div className={`relative flex items-center gap-3 p-4 ${slot.pokemon ? "rounded-t-3xl" : "rounded-3xl"}`} style={{ backgroundColor: slot.pokemon ? bg + "99" : "rgba(156,163,175,0.15)" }}>
                 {slot.pokemon ? (

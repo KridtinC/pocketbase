@@ -109,7 +109,42 @@ export default function MovesPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-white/40 dark:border-white/10 overflow-hidden backdrop-blur-md" style={{ background: "var(--glass-bg)" }}>
+      {/* Mobile card list */}
+      <div className="flex flex-col gap-2 sm:hidden">
+        {items.map((m) => (
+          <Link
+            key={m.name}
+            href={`/moves/${m.name}`}
+            className="rounded-2xl border border-white/30 dark:border-white/10 px-4 py-3 hover:bg-white/30 dark:hover:bg-white/5 transition-colors"
+            style={{ background: "var(--glass-bg)" }}
+          >
+            <div className="flex items-start justify-between gap-2 mb-1">
+              <span className="font-semibold text-zinc-900 dark:text-zinc-100 leading-tight">{m.names.en ?? capitalize(m.name)}</span>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <TypeBadge type={m.type} showIcon />
+                <DamageClassIcon dmgClass={m.damage_class} />
+              </div>
+            </div>
+            {m.short_effect && (
+              <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-2 line-clamp-2">{m.short_effect}</p>
+            )}
+            <div className="flex gap-4 text-xs text-zinc-500 dark:text-zinc-400">
+              <span><span className="font-semibold text-zinc-700 dark:text-zinc-300">{m.power ?? "—"}</span> PWR</span>
+              <span><span className="font-semibold text-zinc-700 dark:text-zinc-300">{m.accuracy ?? "—"}</span> ACC</span>
+              <span><span className="font-semibold text-zinc-700 dark:text-zinc-300">{m.pp ?? "—"}</span> PP</span>
+            </div>
+          </Link>
+        ))}
+        {loading && Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="rounded-2xl border border-white/30 dark:border-white/10 px-4 py-3" style={{ background: "var(--glass-bg)" }}>
+            <Skeleton className="h-4 w-40 mb-2" />
+            <Skeleton className="h-3 w-56" />
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden sm:block rounded-xl border border-white/40 dark:border-white/10 overflow-hidden backdrop-blur-md" style={{ background: "var(--glass-bg)" }}>
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide border-b border-white/40 dark:border-white/10" style={{ background: "var(--glass-strong)" }}>
@@ -123,10 +158,7 @@ export default function MovesPage() {
           </thead>
           <tbody>
             {items.map((m) => (
-              <tr
-                key={m.name}
-                className="border-b border-white/30 dark:border-white/10 last:border-0 hover:bg-white/30 dark:hover:bg-white/5 transition-colors"
-              >
+              <tr key={m.name} className="border-b border-white/30 dark:border-white/10 last:border-0 hover:bg-white/30 dark:hover:bg-white/5 transition-colors">
                 <td className="px-4 py-3">
                   <Link href={`/moves/${m.name}`} className="block">
                     <span className="font-medium text-zinc-900 dark:text-zinc-100">{m.names.en ?? capitalize(m.name)}</span>
@@ -144,9 +176,7 @@ export default function MovesPage() {
             ))}
             {loading && Array.from({ length: 6 }).map((_, i) => (
               <tr key={i} className="border-b border-white/20 dark:border-white/10">
-                <td colSpan={6} className="px-4 py-3">
-                  <Skeleton className="h-4 w-40" />
-                </td>
+                <td colSpan={6} className="px-4 py-3"><Skeleton className="h-4 w-40" /></td>
               </tr>
             ))}
           </tbody>
