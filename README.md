@@ -1,13 +1,16 @@
 # Pokédex — Full-Stack App
 
-A full-featured Pokédex webapp with 1025 Pokémon, moves, abilities, items, natures, a type matchup calculator, and a competitive team builder — all running locally with Docker.
+A full-featured Pokédex webapp with 1025 Pokémon, moves, abilities, items, natures, a type matchup calculator, and a competitive team builder.
+
+**Live demo:** [pocketbase.pages.dev](https://pocketbase.pages.dev)
 
 | Layer | Tech |
 |-------|------|
 | Frontend | Next.js 14 (App Router) · TypeScript · Tailwind CSS · shadcn/ui |
 | Backend | Go 1.22 · chi · hexagonal architecture |
-| Database | MongoDB 7 |
+| Database | MongoDB Atlas |
 | Data | Bulk import from [PokéAPI](https://pokeapi.co) |
+| Hosting | Cloudflare Pages (frontend) · Fly.io (API) |
 
 ---
 
