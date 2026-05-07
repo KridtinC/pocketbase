@@ -195,8 +195,12 @@ func (r *PokemonRepo) List(ctx context.Context, f port.PokemonFilter) (port.Poke
 
 	skip := int64((f.Page - 1) * f.Limit)
 	limit := int64(f.Limit)
+	sortDoc := bson.D{{Key: sortField, Value: order}}
+	if sortField != "_id" {
+		sortDoc = append(sortDoc, bson.E{Key: "_id", Value: 1})
+	}
 	opts := options.Find().
-		SetSort(bson.D{{Key: sortField, Value: order}, {Key: "_id", Value: 1}}).
+		SetSort(sortDoc).
 		SetSkip(skip).
 		SetLimit(limit).
 		SetProjection(bson.M{"_id": 1, "name": 1, "names": 1, "types": 1, "sprites": 1})
