@@ -35,12 +35,14 @@
 @layer base {
   * { @apply box-border; }
 
-  html { @apply antialiased scroll-smooth; }
+  html {
+    min-height: 100dvh;
+    background: linear-gradient(145deg, var(--page-from) 0%, var(--page-to) 100%);
+    @apply antialiased scroll-smooth;
+  }
 
   body {
-    min-height: 100vh;
-    background: linear-gradient(145deg, var(--page-from) 0%, var(--page-to) 100%);
-    background-attachment: fixed;
+    min-height: 100dvh;
     @apply text-zinc-900 dark:text-zinc-100;
   }
 }
