@@ -179,7 +179,7 @@ export default async function PokemonDetail({ params }: Props) {
           style={{ background: "var(--glass-card)", backdropFilter: "blur(2px)" }}
         >
           {/* Header */}
-          <div className="relative flex flex-col items-center pt-8 pb-20">
+          <div className="relative flex flex-col items-center pt-16 pb-20">
             {/* Type badges — top left */}
             <div className="absolute top-4 left-4 flex items-center gap-2">
               {pokemon.types.map((t) => <TypeBadge key={t} type={t} showIcon />)}
