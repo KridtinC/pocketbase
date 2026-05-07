@@ -397,29 +397,33 @@ export default function TeamBuilderPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Team Builder</h1>
-        <div className="flex gap-2">
+      <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
+        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 shrink-0">Team Builder</h1>
+        <div className="flex gap-2 shrink-0">
           <button
             onClick={() => { setSlots(Array.from({ length: 6 }, defaultSlot)); setCurrentTeamId(null); setTeamName("My Team"); }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium border border-white/30 dark:border-white/10 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 dark:hover:border-red-800 hover:text-red-600 dark:hover:text-red-400 transition-colors text-zinc-700 dark:text-zinc-200"
             style={{ background: "var(--glass-bg)" }}
           >
-            <RotateCcw size={15} /> Clear
+            <RotateCcw size={15} />
+            <span className="hidden sm:inline">Clear</span>
           </button>
           <button
             onClick={() => setShowSaved(!showSaved)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium border border-white/30 dark:border-white/10 hover:bg-white/20 dark:hover:bg-white/10 transition-colors text-zinc-700 dark:text-zinc-200"
             style={{ background: "var(--glass-bg)" }}
           >
-            <FolderOpen size={15} /> Saved ({savedTeams.length})
+            <FolderOpen size={15} />
+            <span className="hidden sm:inline">Saved</span>
+            <span>({savedTeams.length})</span>
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white transition-colors"
           >
-            <Save size={15} /> {saving ? "Saving…" : "Save Team"}
+            <Save size={15} />
+            <span>{saving ? "Saving…" : <><span className="hidden sm:inline">Save </span>Team</>}</span>
           </button>
         </div>
       </div>

@@ -24,10 +24,13 @@ export default async function TypeChartPage() {
 
       {/* Matchup matrix */}
       <div className="overflow-x-auto rounded-2xl border border-white/40 dark:border-white/10 backdrop-blur-md" style={{ background: "var(--glass-bg)" }}>
-        <table className="text-xs border-collapse w-full min-w-max">
+        <table className="text-xs border-collapse" style={{ minWidth: "max-content" }}>
           <thead>
             <tr>
-              <th className="p-2 text-left text-zinc-400 dark:text-zinc-500 font-medium border-b border-r border-white/40 dark:border-white/10" style={{ background: "var(--glass-strong)" }}>
+              <th
+                className="p-2 text-left text-zinc-400 dark:text-zinc-500 font-medium border-b border-r border-white/40 dark:border-white/10 sticky left-0 z-10 whitespace-nowrap"
+                style={{ background: "var(--glass-strong)" }}
+              >
                 ATK ↓ / DEF →
               </th>
               {types.map((t) => (
@@ -40,7 +43,10 @@ export default async function TypeChartPage() {
           <tbody>
             {types.map((atk) => (
               <tr key={atk.name} className="border-b border-white/30 dark:border-white/10 last:border-0">
-                <td className="p-1 border-r border-white/30 dark:border-white/10" style={{ background: "var(--glass-strong)" }}>
+                <td
+                  className="p-1 border-r border-white/30 dark:border-white/10 sticky left-0 z-10"
+                  style={{ background: "var(--glass-strong)" }}
+                >
                   <TypeBadge type={atk.name} showIcon className="text-[10px] px-1.5 py-0.5" />
                 </td>
                 {types.map((def) => {
