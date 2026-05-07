@@ -9,6 +9,9 @@ if (process.env.NODE_ENV === "development") {
 const nextConfig = {
   // "standalone" is for Docker; Cloudflare Pages uses its own output via next-on-pages
   ...(process.env.CF_PAGES ? {} : { output: "standalone" }),
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080",
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "raw.githubusercontent.com" },
