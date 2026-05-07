@@ -462,7 +462,7 @@ export default function TeamBuilderPage() {
           const bg = mainType ? typeBg(mainType) : "#9ca3af";
 
           return (
-            <div key={i} className="rounded-3xl border border-white/20 dark:border-white/10 shadow-sm" style={{ background: "var(--glass-bg)" }}>
+            <div key={i} className="rounded-3xl border border-white/20 dark:border-white/10 shadow-sm min-w-0 overflow-hidden" style={{ background: "var(--glass-bg)" }}>
               {/* Header */}
               <div className={`relative flex items-center gap-3 p-4 ${slot.pokemon ? "rounded-t-3xl" : "rounded-3xl"}`} style={{ backgroundColor: slot.pokemon ? bg + "99" : "rgba(156,163,175,0.15)" }}>
                 {slot.pokemon ? (
@@ -568,43 +568,43 @@ export default function TeamBuilderPage() {
                   )}
 
                   {/* IV / EV inputs */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="w-10 shrink-0" />
-                      <span className="flex-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500 text-center">IV</span>
-                      <span className="w-8 shrink-0" />
-                      <span className="w-px shrink-0" />
-                      <span className="flex-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500 text-center">EV</span>
-                      <span className="w-8 shrink-0" />
+                  <div className="min-w-0">
+                    <div className="grid grid-cols-[2.5rem_1fr_2rem_1px_1fr_2rem] items-center gap-x-1.5 mb-1">
+                      <span />
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-400 text-center">IV</span>
+                      <span />
+                      <span />
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-400 text-center">EV</span>
+                      <span />
                     </div>
                     <div className="space-y-1">
                       {STAT_KEYS.map((k) => (
-                        <div key={k} className="flex items-center gap-2">
-                          <span className="w-10 text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 shrink-0">{STAT_LABELS[k]}</span>
+                        <div key={k} className="grid grid-cols-[2.5rem_1fr_2rem_1px_1fr_2rem] items-center gap-x-1.5">
+                          <span className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500">{STAT_LABELS[k]}</span>
                           <input
                             type="range" min={0} max={31}
                             value={slot.ivs[k]}
                             onChange={(e) => updateIV(i, k, +e.target.value)}
-                            className="flex-1 h-1 accent-blue-400 cursor-pointer"
+                            className="w-full h-1 accent-blue-400 cursor-pointer min-w-0"
                           />
                           <input
                             type="number" min={0} max={31}
                             value={slot.ivs[k]}
                             onChange={(e) => updateIV(i, k, +e.target.value)}
-                            className="w-8 text-center text-[11px] font-bold rounded border border-zinc-200 dark:border-zinc-700 bg-white/60 dark:bg-zinc-900/60 text-zinc-900 dark:text-zinc-100 h-5 px-0.5 tabular-nums shrink-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-full text-center text-[11px] font-bold rounded border border-zinc-200 dark:border-zinc-700 bg-white/60 dark:bg-zinc-900/60 text-zinc-900 dark:text-zinc-100 h-5 px-0 tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
-                          <span className="w-px h-4 bg-zinc-200 dark:bg-zinc-700 shrink-0" />
+                          <span className="h-4 w-px bg-zinc-200 dark:bg-zinc-700 justify-self-center" />
                           <input
                             type="range" min={0} max={252}
                             value={slot.evs[k]}
                             onChange={(e) => updateEV(i, k, +e.target.value)}
-                            className="flex-1 h-1 accent-amber-400 cursor-pointer"
+                            className="w-full h-1 accent-amber-400 cursor-pointer min-w-0"
                           />
                           <input
                             type="number" min={0} max={252}
                             value={slot.evs[k]}
                             onChange={(e) => updateEV(i, k, +e.target.value)}
-                            className="w-8 text-center text-[11px] font-bold rounded border border-zinc-200 dark:border-zinc-700 bg-white/60 dark:bg-zinc-900/60 text-zinc-900 dark:text-zinc-100 h-5 px-0.5 tabular-nums shrink-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-full text-center text-[11px] font-bold rounded border border-zinc-200 dark:border-zinc-700 bg-white/60 dark:bg-zinc-900/60 text-zinc-900 dark:text-zinc-100 h-5 px-0 tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                         </div>
                       ))}

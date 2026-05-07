@@ -25,7 +25,8 @@ export default async function NaturesPage() {
       <h1 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-zinc-100">Nature Dex</h1>
 
       <div className="rounded-2xl border border-white/40 dark:border-white/10 overflow-hidden backdrop-blur-md" style={{ background: "var(--glass-bg)" }}>
-        <table className="w-full text-sm border-collapse">
+        <div className="overflow-x-auto">
+        <table className="w-full text-sm border-collapse min-w-[480px]">
           <thead>
             <tr className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide border-b border-white/40 dark:border-white/10" style={{ background: "var(--glass-strong)" }}>
               <th className="px-4 py-2 text-left">Nature</th>
@@ -66,6 +67,7 @@ export default async function NaturesPage() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
