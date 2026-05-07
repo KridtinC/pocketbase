@@ -9,8 +9,15 @@ import { TypeBadge } from "@/components/type-badge";
 import { DamageClassIcon } from "@/components/damage-class-icon";
 import { Skeleton } from "@/components/skeleton";
 import { fetchMoveList } from "@/lib/api";
+import { getPageCache, setPageCache } from "@/lib/page-cache";
 import { capitalize } from "@/lib/utils";
 import type { Move } from "@/lib/types";
+
+interface MoveCache {
+  search: string; type: string; dmgClass: string;
+  items: Move[]; page: number; total: number; scrollY: number;
+}
+const CACHE_KEY = "moves";
 
 const TYPES = [
   "normal","fire","water","electric","grass","ice","fighting","poison",
@@ -20,16 +27,20 @@ const CLASSES = ["physical", "special", "status"];
 const LIMIT = 30;
 
 export default function MovesPage() {
-  const [search, setSearch]     = useState("");
-  const [type, setType]         = useState("");
-  const [dmgClass, setDmgClass] = useState("");
-  const [debounced, setDebounced] = useState("");
-  const [items, setItems]       = useState<Move[]>([]);
-  const [page, setPage]         = useState(1);
-  const [total, setTotal]       = useState(0);
-  const [hasMore, setHasMore]   = useState(true);
-  const [loading, setLoading]   = useState(false);
-  const sentinelRef             = useRef<HTMLDivElement | null>(null);
+  const cached = useRef(getPageCache<MoveCache>(CACHE_KEY));
+
+  const [search, setSearch]       = useState(cached.current?.search ?? "");
+  const [type, setType]           = useState(cached.current?.type ?? "");
+  const [dmgClass, setDmgClass]   = useState(cached.current?.dmgClass ?? "");
+  const [debounced, setDebounced] = useState(cached.current?.search ?? "");
+  const [items, setItems]         = useState<Move[]>(cached.current?.items ?? []);
+  const [page, setPage]           = useState(cached.current?.page ?? 1);
+  const [total, setTotal]         = useState(cached.current?.total ?? 0);
+  const [hasMore, setHasMore]     = useState(true);
+  const [loading, setLoading]     = useState(false);
+  const sentinelRef               = useRef<HTMLDivElement | null>(null);
+  const scrollRef                 = useRef(0);
+  const didRestore                = useRef(false);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search), 300);
@@ -42,13 +53,12 @@ export default function MovesPage() {
   useEffect(() => {
     if (prevKey.current !== filtersKey) {
       prevKey.current = filtersKey;
-      setItems([]);
-      setPage(1);
-      setHasMore(true);
+      setItems([]); setPage(1); setHasMore(true);
     }
   }, [filtersKey]);
 
   useEffect(() => {
+    if (cached.current && page === cached.current.page && filtersKey === `${cached.current.search}|${cached.current.type}|${cached.current.dmgClass}`) return;
     let cancelled = false;
     setLoading(true);
     fetchMoveList({ search: debounced || undefined, type: type || undefined, damage_class: dmgClass || undefined, page, limit: LIMIT })
@@ -64,6 +74,27 @@ export default function MovesPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, filtersKey]);
 
+  // Track scroll
+  useEffect(() => {
+    const onScroll = () => { scrollRef.current = window.scrollY; };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Restore scroll
+  useEffect(() => {
+    if (cached.current?.scrollY && !didRestore.current && items.length > 0) {
+      didRestore.current = true;
+      requestAnimationFrame(() => window.scrollTo(0, cached.current!.scrollY));
+    }
+  }, [items]);
+
+  // Save on unmount
+  useEffect(() => () => {
+    setPageCache<MoveCache>(CACHE_KEY, { search, type, dmgClass, items, page, total, scrollY: scrollRef.current });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, type, dmgClass, items, page, total]);
+
   const loadMore = useCallback(() => {
     if (!loading && hasMore) setPage((p) => p + 1);
   }, [loading, hasMore]);
@@ -76,7 +107,7 @@ export default function MovesPage() {
   }, [loadMore]);
 
   return (
-    <div>
+    <div className="animate-fade-up">
       <h1 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-zinc-100">Move List</h1>
 
       <div className="sticky top-[calc(3.5rem+10px)] z-30 mb-6">
@@ -110,12 +141,12 @@ export default function MovesPage() {
       </div>
 
       {/* Mobile card list */}
-      <div className="flex flex-col gap-2 sm:hidden">
+      <div className="flex flex-col gap-2 sm:hidden animate-stagger">
         {items.map((m) => (
           <Link
             key={m.name}
             href={`/moves/${m.name}`}
-            className="rounded-2xl border border-white/30 dark:border-white/10 px-4 py-3 hover:bg-white/30 dark:hover:bg-white/5 transition-colors"
+            className="rounded-2xl border border-white/30 dark:border-white/10 px-4 py-3 hover:bg-white/30 dark:hover:bg-white/5 active:scale-[0.98] transition-all"
             style={{ background: "var(--glass-bg)" }}
           >
             <div className="flex items-start justify-between gap-2 mb-1">

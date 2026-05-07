@@ -8,26 +8,34 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/skeleton";
 import { fetchItemList, fetchItemCategories } from "@/lib/api";
+import { getPageCache, setPageCache } from "@/lib/page-cache";
 import { capitalize } from "@/lib/utils";
 import type { Item } from "@/lib/types";
 
+interface ItemCache {
+  search: string; category: string; items: Item[]; page: number; total: number; scrollY: number;
+}
+
+const CACHE_KEY = "items";
 const LIMIT = 30;
 
 export default function ItemsPage() {
-  const [search, setSearch]     = useState("");
-  const [debounced, setDeb]     = useState("");
-  const [category, setCategory] = useState("");
-  const [categories, setCategories] = useState<string[]>([]);
-  const [items, setItems]       = useState<Item[]>([]);
-  const [page, setPage]         = useState(1);
-  const [total, setTotal]       = useState(0);
-  const [hasMore, setHasMore]   = useState(true);
-  const [loading, setLoading]   = useState(false);
-  const sentinelRef             = useRef<HTMLDivElement | null>(null);
+  const cached = useRef(getPageCache<ItemCache>(CACHE_KEY));
 
-  useEffect(() => {
-    fetchItemCategories().then(setCategories).catch(console.error);
-  }, []);
+  const [search, setSearch]         = useState(cached.current?.search ?? "");
+  const [debounced, setDeb]         = useState(cached.current?.search ?? "");
+  const [category, setCategory]     = useState(cached.current?.category ?? "");
+  const [categories, setCategories] = useState<string[]>([]);
+  const [items, setItems]           = useState<Item[]>(cached.current?.items ?? []);
+  const [page, setPage]             = useState(cached.current?.page ?? 1);
+  const [total, setTotal]           = useState(cached.current?.total ?? 0);
+  const [hasMore, setHasMore]       = useState(true);
+  const [loading, setLoading]       = useState(false);
+  const sentinelRef                 = useRef<HTMLDivElement | null>(null);
+  const scrollRef                   = useRef(0);
+  const didRestore                  = useRef(false);
+
+  useEffect(() => { fetchItemCategories().then(setCategories).catch(console.error); }, []);
 
   useEffect(() => {
     const t = setTimeout(() => setDeb(search), 300);
@@ -44,6 +52,7 @@ export default function ItemsPage() {
   }, [filtersKey]);
 
   useEffect(() => {
+    if (cached.current && page === cached.current.page && filtersKey === `${cached.current.search}|${cached.current.category}`) return;
     let cancelled = false;
     setLoading(true);
     fetchItemList({ search: debounced || undefined, category: category || undefined, page, limit: LIMIT })
@@ -59,6 +68,27 @@ export default function ItemsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, filtersKey]);
 
+  // Track scroll
+  useEffect(() => {
+    const onScroll = () => { scrollRef.current = window.scrollY; };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Restore scroll
+  useEffect(() => {
+    if (cached.current?.scrollY && !didRestore.current && items.length > 0) {
+      didRestore.current = true;
+      requestAnimationFrame(() => window.scrollTo(0, cached.current!.scrollY));
+    }
+  }, [items]);
+
+  // Save on unmount
+  useEffect(() => () => {
+    setPageCache<ItemCache>(CACHE_KEY, { search, category, items, page, total, scrollY: scrollRef.current });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, category, items, page, total]);
+
   const loadMore = useCallback(() => {
     if (!loading && hasMore) setPage((p) => p + 1);
   }, [loading, hasMore]);
@@ -71,7 +101,7 @@ export default function ItemsPage() {
   }, [loadMore]);
 
   return (
-    <div>
+    <div className="animate-fade-up">
       <h1 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">Item Dex</h1>
 
       <div className="sticky top-[calc(3.5rem+10px)] z-30 mb-6">
@@ -95,12 +125,12 @@ export default function ItemsPage() {
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 animate-stagger">
         {items.map((item) => (
           <Link
             key={item.name}
             href={`/items/${item.name}`}
-            className="flex items-center gap-3 rounded-2xl p-3 border border-white/40 dark:border-white/10 hover:shadow-md hover:scale-[1.01] transition-all backdrop-blur-sm"
+            className="flex items-center gap-3 rounded-2xl p-3 border border-white/40 dark:border-white/10 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all backdrop-blur-sm"
             style={{ background: "var(--glass-bg)" }}
           >
             {item.image_url ? (

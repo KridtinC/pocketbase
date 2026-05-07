@@ -110,7 +110,7 @@ export default function PokedexPage() {
   }, [loadMore]);
 
   return (
-    <div>
+    <div className="animate-fade-up">
       {/* Sticky search + count bar */}
       <div className="sticky top-[calc(3.5rem+10px)] z-30 mb-6">
         <div className="rounded-3xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-xl px-4 py-3 bg-white/40 dark:bg-zinc-900/50">
@@ -190,7 +190,7 @@ export default function PokedexPage() {
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 animate-stagger">
         {items.map((p) => (
           <PokemonCard key={p.id} pokemon={p} />
         ))}

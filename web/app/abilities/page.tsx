@@ -6,31 +6,49 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/skeleton";
 import { fetchAbilityList } from "@/lib/api";
+import { getPageCache, setPageCache } from "@/lib/page-cache";
 import { capitalize } from "@/lib/utils";
 import type { Ability } from "@/lib/types";
 
+interface AbilityCache {
+  search: string; items: Ability[]; page: number; total: number; scrollY: number;
+}
+
+const CACHE_KEY = "abilities";
 const LIMIT = 30;
 
 export default function AbilitiesPage() {
-  const [search, setSearch]   = useState("");
-  const [debounced, setDeb]   = useState("");
-  const [items, setItems]     = useState<Ability[]>([]);
-  const [page, setPage]       = useState(1);
-  const [total, setTotal]     = useState(0);
+  const cached = useRef(getPageCache<AbilityCache>(CACHE_KEY));
+
+  const [search, setSearch]   = useState(cached.current?.search ?? "");
+  const [debounced, setDeb]   = useState(cached.current?.search ?? "");
+  const [items, setItems]     = useState<Ability[]>(cached.current?.items ?? []);
+  const [page, setPage]       = useState(cached.current?.page ?? 1);
+  const [total, setTotal]     = useState(cached.current?.total ?? 0);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const sentinelRef           = useRef<HTMLDivElement | null>(null);
+  const scrollRef             = useRef(0);
+  const didRestore            = useRef(false);
 
+  // Debounce search
   useEffect(() => {
     const t = setTimeout(() => setDeb(search), 300);
     return () => clearTimeout(t);
   }, [search]);
 
+  // Reset on filter change
+  const prevDeb = useRef(debounced);
   useEffect(() => {
-    setItems([]); setPage(1); setHasMore(true);
+    if (prevDeb.current !== debounced) {
+      prevDeb.current = debounced;
+      setItems([]); setPage(1); setHasMore(true);
+    }
   }, [debounced]);
 
+  // Fetch
   useEffect(() => {
+    if (cached.current && page === cached.current.page && debounced === cached.current.search) return;
     let cancelled = false;
     setLoading(true);
     fetchAbilityList({ search: debounced || undefined, page, limit: LIMIT })
@@ -46,6 +64,29 @@ export default function AbilitiesPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, debounced]);
 
+  // Track scroll
+  useEffect(() => {
+    const onScroll = () => { scrollRef.current = window.scrollY; };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Restore scroll from cache
+  useEffect(() => {
+    if (cached.current?.scrollY && !didRestore.current && items.length > 0) {
+      didRestore.current = true;
+      requestAnimationFrame(() => window.scrollTo(0, cached.current!.scrollY));
+    }
+  }, [items]);
+
+  // Save on unmount
+  useEffect(() => () => {
+    setPageCache<AbilityCache>(CACHE_KEY, {
+      search, items, page, total, scrollY: scrollRef.current,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, items, page, total]);
+
   const loadMore = useCallback(() => {
     if (!loading && hasMore) setPage((p) => p + 1);
   }, [loading, hasMore]);
@@ -58,7 +99,7 @@ export default function AbilitiesPage() {
   }, [loadMore]);
 
   return (
-    <div>
+    <div className="animate-fade-up">
       <h1 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">Ability List</h1>
 
       <div className="sticky top-[calc(3.5rem+10px)] z-30 mb-6">
@@ -71,12 +112,12 @@ export default function AbilitiesPage() {
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 animate-stagger">
         {items.map((a) => (
           <Link
             key={a.name}
             href={`/abilities/${a.name}`}
-            className="rounded-2xl p-4 border border-white/40 dark:border-white/10 shadow-sm hover:shadow-md hover:scale-[1.01] transition-all backdrop-blur-sm"
+            className="rounded-2xl p-4 border border-white/40 dark:border-white/10 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all backdrop-blur-sm"
             style={{ background: "var(--glass-bg)" }}
           >
             <p className="font-semibold text-zinc-900 dark:text-zinc-100">{a.names.en ?? capitalize(a.name)}</p>
