@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { TypeBadge } from "@/components/type-badge";
 import { DamageClassIcon } from "@/components/damage-class-icon";
 import { Skeleton } from "@/components/skeleton";
+import { FilterShell } from "@/components/filter-shell";
 import { fetchMoveList } from "@/lib/api";
 import { getPageCache, setPageCache } from "@/lib/page-cache";
 import { capitalize } from "@/lib/utils";
@@ -111,7 +112,10 @@ export default function MovesPage() {
       <h1 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-zinc-100">Move List</h1>
 
       <div className="sticky top-[calc(3.5rem+10px)] z-30 mb-6">
-        <div className="rounded-3xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-xl px-4 py-3 bg-white/40 dark:bg-zinc-900/50">
+        <FilterShell
+          countLabel={total > 0 ? `${items.length} / ${total} moves` : undefined}
+          activeFilters={[search, type, dmgClass].filter(Boolean).length}
+        >
           <div className="flex flex-wrap gap-3">
             <div className="relative flex-1 min-w-52">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
@@ -136,8 +140,7 @@ export default function MovesPage() {
               </SelectContent>
             </Select>
           </div>
-          {total > 0 && <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">{items.length} / {total} moves</p>}
-        </div>
+        </FilterShell>
       </div>
 
       {/* Mobile card list */}
