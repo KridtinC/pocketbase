@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/skeleton";
+import { FilterShell } from "@/components/filter-shell";
 import { fetchAbilityList } from "@/lib/api";
 import { getPageCache, setPageCache } from "@/lib/page-cache";
 import { capitalize } from "@/lib/utils";
@@ -103,13 +104,15 @@ export default function AbilitiesPage() {
       <h1 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">Ability List</h1>
 
       <div className="sticky top-[calc(3.5rem+10px)] z-30 mb-6">
-        <div className="rounded-3xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-xl px-4 py-3 bg-white/40 dark:bg-zinc-900/50">
+        <FilterShell
+          countLabel={total > 0 ? `${items.length} / ${total} abilities` : undefined}
+          activeFilters={search ? 1 : 0}
+        >
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
             <Input className="pl-9" placeholder="Search abilities…" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
-          {total > 0 && <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">{items.length} / {total} abilities</p>}
-        </div>
+        </FilterShell>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 animate-stagger">
