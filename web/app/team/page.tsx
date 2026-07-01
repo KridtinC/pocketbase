@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { Trash2, Save, FolderOpen, X, ChevronDown, ChevronUp, RotateCcw, Package } from "lucide-react";
+import { Trash2, Save, FolderOpen, X, ChevronDown, ChevronUp, RotateCcw, Package, LogIn, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fetchPokemonList, fetchNatureList, fetchTeamList, createTeam, updateTeam, deleteTeam, fetchItemList } from "@/lib/api";
 import { capitalize, typeBg } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
 import type { PokemonSummary, Nature, Team, TeamMember, StatBlock, Pokemon, Item } from "@/lib/types";
 
 // ─── Stat formula ─────────────────────────────────────────────────────────────
@@ -276,6 +277,7 @@ function MoveSlot({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function TeamBuilderPage() {
+  const { user, loading: authLoading, login } = useAuth();
   const [slots, setSlots] = useState<SlotState[]>(Array.from({ length: 6 }, defaultSlot));
   const [natures, setNatures] = useState<Nature[]>([]);
   const [teamName, setTeamName] = useState("My Team");
@@ -289,8 +291,12 @@ export default function TeamBuilderPage() {
 
   useEffect(() => {
     fetchNatureList().then(setNatures).catch(console.error);
-    fetchTeamList().then(setSavedTeams).catch(console.error);
   }, []);
+
+  useEffect(() => {
+    if (!user) { setSavedTeams([]); return; }
+    fetchTeamList().then(setSavedTeams).catch(console.error);
+  }, [user]);
 
   // Fetch full pokemon data when Pokémon is selected
   useEffect(() => {
@@ -394,6 +400,32 @@ export default function TeamBuilderPage() {
     setSavedTeams((prev) => prev.filter((t) => t.id !== id));
     if (currentTeamId === id) setCurrentTeamId(null);
   };
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="animate-spin text-zinc-400" size={28} />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-24 text-center max-w-sm mx-auto">
+        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Team Builder</h1>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          Sign in to build and save your own Pokémon teams — they&apos;re private to your account.
+        </p>
+        <button
+          onClick={login}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+        >
+          <LogIn size={16} />
+          Sign in with Google
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div>

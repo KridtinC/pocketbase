@@ -16,6 +16,7 @@ import (
 func initializeAPI(ctx context.Context, cfg appConfig) (*apiApp, func(), error) {
 	mongoCfg := provideMongoConfig(cfg)
 	routerCfg := provideRouterConfig(cfg)
+	authCfg := provideAuthConfig(cfg)
 
 	client, err := mongorepo.NewClient(ctx, mongoCfg)
 	if err != nil {
@@ -36,6 +37,8 @@ func initializeAPI(ctx context.Context, cfg appConfig) (*apiApp, func(), error) 
 	itemRepo := mongorepo.NewItemRepo(db)
 	natureRepo := mongorepo.NewNatureRepo(db)
 	teamRepo := mongorepo.NewTeamRepo(db)
+	userRepo := mongorepo.NewUserRepo(db)
+	sessionRepo := mongorepo.NewSessionRepo(db)
 
 	pokemonSvc := service.NewPokemonService(pokemonRepo)
 	moveSvc := service.NewMoveService(moveRepo)
@@ -46,6 +49,7 @@ func initializeAPI(ctx context.Context, cfg appConfig) (*apiApp, func(), error) 
 	itemSvc := service.NewItemService(itemRepo)
 	natureSvc := service.NewNatureService(natureRepo)
 	teamSvc := service.NewTeamService(teamRepo)
+	authSvc := service.NewAuthService(userRepo, sessionRepo, authCfg)
 
 	deps := httpadapter.Deps{
 		Pokemon:   pokemonSvc,
@@ -57,6 +61,7 @@ func initializeAPI(ctx context.Context, cfg appConfig) (*apiApp, func(), error) 
 		Items:     itemSvc,
 		Natures:   natureSvc,
 		Teams:     teamSvc,
+		Auth:      authSvc,
 		Config:    routerCfg,
 	}
 	router := httpadapter.NewRouter(deps)

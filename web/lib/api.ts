@@ -3,16 +3,28 @@ import type {
   Ability, AbilityPage, PokemonType, EvolutionChain,
   Item, ItemPage, Nature, Team,
 } from "./types";
+import { apiBase } from "./env";
+import { getAccessToken, refreshAccessToken } from "./auth-token";
 
-function getBase(): string {
-  if (typeof window !== "undefined") {
-    return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+const getBase = apiBase;
+
+// Attaches a bearer access token when one is available (silently refreshing
+// it first if needed) and retries once on 401 in case it expired mid-flight.
+// Harmless on public endpoints — they simply ignore the header.
+async function authedFetch(url: string, init: RequestInit): Promise<Response> {
+  const headers = new Headers(init.headers);
+  let token = getAccessToken() ?? (await refreshAccessToken());
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+
+  let res = await fetch(url, { ...init, headers });
+  if (res.status === 401 && token) {
+    const fresh = await refreshAccessToken();
+    if (fresh) {
+      headers.set("Authorization", `Bearer ${fresh}`);
+      res = await fetch(url, { ...init, headers });
+    }
   }
-  return (
-    process.env.API_URL_INTERNAL ??
-    process.env.NEXT_PUBLIC_API_URL ??
-    "http://localhost:8080"
-  );
+  return res;
 }
 
 async function get<T>(path: string, params?: Record<string, string | number | undefined>): Promise<T> {
@@ -24,7 +36,7 @@ async function get<T>(path: string, params?: Record<string, string | number | un
       }
     }
   }
-  const res = await fetch(url.toString());
+  const res = await authedFetch(url.toString(), {});
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText);
     throw new Error(`API ${res.status}: ${text}`);
@@ -33,7 +45,7 @@ async function get<T>(path: string, params?: Record<string, string | number | un
 }
 
 async function mutate<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const res = await fetch(getBase() + path, {
+  const res = await authedFetch(getBase() + path, {
     method,
     headers: { "Content-Type": "application/json" },
     body: body !== undefined ? JSON.stringify(body) : undefined,

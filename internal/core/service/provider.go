@@ -14,6 +14,7 @@ var ProviderSet = wire.NewSet(
 	NewItemService,
 	NewNatureService,
 	NewTeamService,
+	NewAuthService,
 )
 
 // SyncProviderSet wires the bulk-sync use case.

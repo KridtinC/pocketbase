@@ -58,6 +58,17 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) error {
 			{Keys: asc("type")},
 			{Keys: asc("damage_class")},
 		}},
+		{"users", []mongo.IndexModel{
+			{Keys: bson.D{{Key: "provider", Value: 1}, {Key: "provider_user_id", Value: 1}}, Options: options.Index().SetUnique(true)},
+		}},
+		{"sessions", []mongo.IndexModel{
+			{Keys: asc("refresh_token_hash"), Options: options.Index().SetUnique(true)},
+			{Keys: asc("family_id")},
+			{Keys: asc("expires_at"), Options: options.Index().SetExpireAfterSeconds(0)},
+		}},
+		{"teams", []mongo.IndexModel{
+			{Keys: asc("user_id")},
+		}},
 	}
 	for _, s := range specs {
 		if _, err := db.Collection(s.coll).Indexes().CreateMany(ctx, s.idx); err != nil {

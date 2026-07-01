@@ -24,6 +24,7 @@ type TeamMember struct {
 
 type Team struct {
 	ID        string       `json:"id"`
+	UserID    string       `json:"-"`
 	Name      string       `json:"name"`
 	Members   []TeamMember `json:"members"`
 	CreatedAt time.Time    `json:"created_at"`

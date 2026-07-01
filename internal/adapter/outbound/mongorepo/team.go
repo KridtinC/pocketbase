@@ -35,6 +35,7 @@ type teamMemberDoc struct {
 
 type teamDoc struct {
 	ID        string          `bson:"_id"`
+	UserID    string          `bson:"user_id"`
 	Name      string          `bson:"name"`
 	Members   []teamMemberDoc `bson:"members"`
 	CreatedAt time.Time       `bson:"created_at"`
@@ -61,7 +62,7 @@ func (d teamDoc) toDomain() domain.Team {
 			IVs: toStatBlock(m.IVs), EVs: toStatBlock(m.EVs),
 		}
 	}
-	return domain.Team{ID: d.ID, Name: d.Name, Members: members, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
+	return domain.Team{ID: d.ID, UserID: d.UserID, Name: d.Name, Members: members, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
 }
 
 func toDocTeam(t domain.Team) teamDoc {
@@ -74,7 +75,7 @@ func toDocTeam(t domain.Team) teamDoc {
 			IVs: fromStatBlock(m.IVs), EVs: fromStatBlock(m.EVs),
 		}
 	}
-	return teamDoc{ID: t.ID, Name: t.Name, Members: members, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+	return teamDoc{ID: t.ID, UserID: t.UserID, Name: t.Name, Members: members, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
 }
 
 type TeamRepo struct{ coll *mongo.Collection }
@@ -83,8 +84,8 @@ func NewTeamRepo(db *mongo.Database) port.TeamRepo {
 	return &TeamRepo{coll: db.Collection("teams")}
 }
 
-func (r *TeamRepo) List(ctx context.Context) ([]domain.Team, error) {
-	cur, err := r.coll.Find(ctx, bson.M{}, options.Find().SetSort(bson.D{{Key: "updated_at", Value: -1}}))
+func (r *TeamRepo) List(ctx context.Context, userID string) ([]domain.Team, error) {
+	cur, err := r.coll.Find(ctx, bson.M{"user_id": userID}, options.Find().SetSort(bson.D{{Key: "updated_at", Value: -1}}))
 	if err != nil {
 		return nil, err
 	}
@@ -100,9 +101,9 @@ func (r *TeamRepo) List(ctx context.Context) ([]domain.Team, error) {
 	return out, nil
 }
 
-func (r *TeamRepo) GetByID(ctx context.Context, id string) (domain.Team, error) {
+func (r *TeamRepo) GetByID(ctx context.Context, id, userID string) (domain.Team, error) {
 	var d teamDoc
-	err := r.coll.FindOne(ctx, bson.M{"_id": id}).Decode(&d)
+	err := r.coll.FindOne(ctx, bson.M{"_id": id, "user_id": userID}).Decode(&d)
 	if errors.Is(err, mongo.ErrNoDocuments) {
 		return domain.Team{}, domain.ErrNotFound
 	}
@@ -119,7 +120,7 @@ func (r *TeamRepo) Create(ctx context.Context, t domain.Team) error {
 
 func (r *TeamRepo) Update(ctx context.Context, t domain.Team) error {
 	d := toDocTeam(t)
-	res, err := r.coll.ReplaceOne(ctx, bson.M{"_id": d.ID}, d)
+	res, err := r.coll.ReplaceOne(ctx, bson.M{"_id": d.ID, "user_id": d.UserID}, d)
 	if err != nil {
 		return err
 	}
@@ -129,8 +130,8 @@ func (r *TeamRepo) Update(ctx context.Context, t domain.Team) error {
 	return nil
 }
 
-func (r *TeamRepo) Delete(ctx context.Context, id string) error {
-	res, err := r.coll.DeleteOne(ctx, bson.M{"_id": id})
+func (r *TeamRepo) Delete(ctx context.Context, id, userID string) error {
+	res, err := r.coll.DeleteOne(ctx, bson.M{"_id": id, "user_id": userID})
 	if err != nil {
 		return err
 	}

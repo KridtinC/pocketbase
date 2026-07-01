@@ -17,6 +17,7 @@ func initializeAPI(ctx context.Context, cfg appConfig) (*apiApp, func(), error) 
 	wire.Build(
 		provideMongoConfig,
 		provideRouterConfig,
+		provideAuthConfig,
 		mongorepo.ProviderSet,
 		service.ProviderSet,
 		httpadapter.ProviderSet,
