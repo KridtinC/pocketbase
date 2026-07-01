@@ -12,7 +12,8 @@ import (
 )
 
 type RouterConfig struct {
-	CORSOrigin string
+	CORSOrigin  string
+	FrontendURL string
 }
 
 type Deps struct {
@@ -25,6 +26,7 @@ type Deps struct {
 	Items     port.ItemService
 	Natures   port.NatureService
 	Teams     port.TeamService
+	Auth      port.AuthService
 	Config    RouterConfig
 }
 
@@ -43,7 +45,7 @@ func NewRouter(d Deps) *chi.Mux {
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{origin},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Content-Type"},
+		AllowedHeaders:   []string{"Accept", "Content-Type", "Authorization"},
 		AllowCredentials: false,
 		MaxAge:           300,
 	}))
@@ -61,6 +63,15 @@ func NewRouter(d Deps) *chi.Mux {
 	ih := &itemHandler{svc: d.Items}
 	nh := &natureHandler{svc: d.Natures}
 	teamh := &teamHandler{svc: d.Teams}
+	authh := &authHandler{svc: d.Auth, frontendURL: d.Config.FrontendURL}
+
+	r.Route("/auth", func(r chi.Router) {
+		r.Get("/google/login", authh.login)
+		r.Get("/google/callback", authh.callback)
+		r.Post("/refresh", authh.refresh)
+		r.Post("/logout", authh.logout)
+		r.With(authMiddleware(d.Auth)).Get("/me", authh.me)
+	})
 
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/pokemon", ph.list)
@@ -88,11 +99,14 @@ func NewRouter(d Deps) *chi.Mux {
 		r.Get("/natures", nh.list)
 		r.Get("/natures/{name}", nh.get)
 
-		r.Get("/teams", teamh.list)
-		r.Post("/teams", teamh.create)
-		r.Get("/teams/{id}", teamh.get)
-		r.Put("/teams/{id}", teamh.update)
-		r.Delete("/teams/{id}", teamh.delete)
+		r.Group(func(r chi.Router) {
+			r.Use(authMiddleware(d.Auth))
+			r.Get("/teams", teamh.list)
+			r.Post("/teams", teamh.create)
+			r.Get("/teams/{id}", teamh.get)
+			r.Put("/teams/{id}", teamh.update)
+			r.Delete("/teams/{id}", teamh.delete)
+		})
 	})
 
 	return r

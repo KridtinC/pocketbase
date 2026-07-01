@@ -127,12 +127,35 @@ type NatureRepo interface {
 	Upsert(ctx context.Context, n domain.Nature) error
 }
 
+// TeamRepo is scoped by owner: every read/write is filtered by userID at the
+// query level so a bug in the service layer can never leak another user's team.
 type TeamRepo interface {
-	List(ctx context.Context) ([]domain.Team, error)
-	GetByID(ctx context.Context, id string) (domain.Team, error)
+	List(ctx context.Context, userID string) ([]domain.Team, error)
+	GetByID(ctx context.Context, id, userID string) (domain.Team, error)
 	Create(ctx context.Context, t domain.Team) error
 	Update(ctx context.Context, t domain.Team) error
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id, userID string) error
+}
+
+// UserRepo is the outbound port for OAuth-authenticated user persistence.
+type UserRepo interface {
+	GetByProviderID(ctx context.Context, provider, providerUserID string) (domain.User, error)
+	GetByID(ctx context.Context, id string) (domain.User, error)
+	// Upsert creates the user on first login, or refreshes their profile
+	// fields (name/email/avatar may change on the provider's side) on
+	// subsequent logins.
+	Upsert(ctx context.Context, u domain.User) (domain.User, error)
+}
+
+// SessionRepo is the outbound port for refresh-token session persistence.
+// Only the SHA-256 hash of a refresh token is ever stored.
+type SessionRepo interface {
+	Create(ctx context.Context, s domain.Session) error
+	GetByHash(ctx context.Context, refreshTokenHash string) (domain.Session, error)
+	// Revoke marks a session used. replacedBy is the ID of the session that
+	// rotated it (empty on plain logout).
+	Revoke(ctx context.Context, id, replacedBy string) error
+	RevokeFamily(ctx context.Context, familyID string) error
 }
 
 // PokeAPIClient is the outbound port for the upstream PokéAPI service.

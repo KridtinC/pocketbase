@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 
 	httpadapter "github.com/KridtinC/pocketbase/internal/adapter/inbound/http"
 	"github.com/KridtinC/pocketbase/internal/adapter/outbound/mongorepo"
+	"github.com/KridtinC/pocketbase/internal/core/service"
 )
 
 type apiApp struct {
@@ -25,23 +27,44 @@ type apiApp struct {
 func provideMongoConfig(cfg appConfig) mongorepo.Config { return cfg.Mongo }
 
 func provideRouterConfig(cfg appConfig) httpadapter.RouterConfig {
-	return httpadapter.RouterConfig{CORSOrigin: cfg.CORSOrig}
+	return httpadapter.RouterConfig{CORSOrigin: cfg.CORSOrig, FrontendURL: cfg.FrontendURL}
 }
 
+func provideAuthConfig(cfg appConfig) service.AuthConfig { return cfg.Auth }
+
 type appConfig struct {
-	Mongo    mongorepo.Config
-	HTTPAddr string
-	CORSOrig string
+	Mongo       mongorepo.Config
+	Auth        service.AuthConfig
+	HTTPAddr    string
+	CORSOrig    string
+	FrontendURL string
 }
 
 func loadConfig() appConfig {
+	frontendURL := envOr("FRONTEND_URL", "http://localhost:3000")
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		slog.Warn("JWT_SECRET not set — generating an ephemeral secret; all sessions will be invalidated on restart. Set JWT_SECRET in production.")
+		b := make([]byte, 32)
+		_, _ = rand.Read(b)
+		jwtSecret = string(b)
+	}
+
 	return appConfig{
 		Mongo: mongorepo.Config{
 			URI:      envOr("MONGO_URI", "mongodb://localhost:27017"),
 			Database: envOr("MONGO_DB", "pokedex"),
 		},
-		HTTPAddr: envOr("HTTP_ADDR", ":8080"),
-		CORSOrig: envOr("CORS_ORIGIN", "http://localhost:3000"),
+		Auth: service.AuthConfig{
+			GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+			GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+			GoogleRedirectURL:  envOr("OAUTH_REDIRECT_URL", "http://localhost:8080/auth/google/callback"),
+			FrontendURL:        frontendURL,
+			JWTSecret:          []byte(jwtSecret),
+		},
+		HTTPAddr:    envOr("HTTP_ADDR", ":8080"),
+		CORSOrig:    envOr("CORS_ORIGIN", "http://localhost:3000"),
+		FrontendURL: frontendURL,
 	}
 }
 
@@ -57,6 +80,9 @@ func main() {
 	slog.SetDefault(logger)
 
 	cfg := loadConfig()
+	if cfg.Auth.GoogleClientID == "" || cfg.Auth.GoogleClientSecret == "" {
+		logger.Warn("GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET not set — Google login will fail")
+	}
 	rootCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 

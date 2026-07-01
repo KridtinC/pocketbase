@@ -5,6 +5,7 @@ import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { CursorGlow } from "@/components/cursor-glow";
 import { ScrollToTop } from "@/components/scroll-to-top";
+import { AuthProvider } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: { default: "Pocketbase", template: "%s | Pocketbase" },
@@ -19,10 +20,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem('theme');var d=window.matchMedia('(prefers-color-scheme:dark)').matches;if(t==='dark'||(t!=='light'&&d))document.documentElement.classList.add('dark')})()` }} />
       </head>
       <body>
-        <CursorGlow />
-        <ScrollToTop />
-        <Navbar />
-        <main className="mx-auto max-w-7xl px-4 py-8">{children}</main>
+        <AuthProvider>
+          <CursorGlow />
+          <ScrollToTop />
+          <Navbar />
+          <main className="mx-auto max-w-7xl px-4 py-8">{children}</main>
+        </AuthProvider>
       </body>
     </html>
   );

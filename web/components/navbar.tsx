@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { UserMenu } from "@/components/user-menu";
 
 const links = [
   { href: "/", label: "Pokédex" },
@@ -46,11 +47,13 @@ export function Navbar() {
             ))}
           </nav>
           <ThemeToggle />
+          <UserMenu />
         </div>
 
         {/* Mobile: theme toggle + hamburger */}
         <div className="flex md:hidden items-center gap-2">
           <ThemeToggle />
+          <UserMenu />
           <button
             onClick={() => setOpen((v) => !v)}
             aria-label="Toggle menu"
